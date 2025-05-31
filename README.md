@@ -7,9 +7,9 @@ This document is a sparse summary of the behavior of the model I trained. For tu
 
 
 ## Implementation Summary
-The "LLM" is a composition of few decoder only transformer blocks and typical input and output layers found in LLM. For certain architectural choices, I have followed GPT-like approaches, e.g., using trainable token and positional embeddings, resue of token embeddings in the output layer etc. 
+The "LLM" is a composition of few decoder only transformer blocks and typical input and output layers found in LLM. For certain architectural choices, I have followed GPT-like approaches, e.g., using trainable token and positional embeddings, reuse of token embeddings in the output layer, etc. 
 
-For smaller models like this, I found it difficult to get good results with generic cross-entropy. For example, lets say we are training the model to predict the sum of two numbers. In such cases, the loss should be based on the result it outputs only, not for the entire sequence. The custom loss function needs to be associated with the model. In this code, a thin wrapper of `nn.Module` is created with the `loss` function. This should be adapted to specialized used cases as necessary. 
+For smaller models like this, I found it difficult to get good results with generic cross-entropy. For example, let's say we are training the model to predict the sum of two numbers. In such cases, the loss should be based on the result it outputs only, not for the entire sequence. The custom loss function needs to be associated with the model. In this code, a thin wrapper of `nn.Module` is created with the `loss` function. This should be adapted to specialized used cases as necessary. 
 
 ## Example Model
 The model implemented in `shakespeare.py` is a 3-transformer long tiny LLM. The model is trained on Shakespeare's works to predict the next character of a given prompt (data available at: [https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt](https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt)). Here is an example output of the model:
@@ -27,12 +27,12 @@ capulet:
 an of him that
 ```
 
-Not bad for a small model trained on a Macbook to predict next character only with context length of 256 characters. The learning rate, train, and test loss looks as follows. 
+Not bad for a small model trained on a MacBook to predict the next character only with a context length of 256 characters. The learning rate, train, and test loss look as follows. 
 
 ![Train loss](./imgs/train_loss.png)
 ![Test loss](./imgs/test_loss.png)
 
-Note that, the model gets overfitted after about 50 epochs, which might be related to the schedular used during optimizations. Also, compared to Karpathy's experiment with GPT-2 and Shakespeare data, this model shows better loss values. However, that is most likely due to the fact that this model is far smaller and I used only lower cases characters in the training data. Also, the model output is not really good either, it just looks "reasonable". 
+Note that, the model gets overfitted after about 50 epochs, which might be related to the scheduler used during optimizations. Also, compared to Karpathy's experiment with GPT-2 and Shakespeare data, this model shows better loss values. However, that is most likely due to the fact that this model is far smaller, and I used only lower-case characters in the training data. The output this model produces is not good either, it just looks "reasonable". 
 
 ## TODOs
 - Implement actual output sampler
