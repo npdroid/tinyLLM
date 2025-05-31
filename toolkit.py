@@ -3,22 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
-from modules import NeuralNet
+from modules import NeuralNet, CharTokenizer
 from warnings import warn
 torch.manual_seed(42)  # the answer to life, the universe, and everything
-
-
-class CharTokenizer:
-    def __init__(self, vocabs: list[str]) -> None:
-        self.nvocab = len(vocabs)
-        self.encoder = {char: idx for idx, char in enumerate(vocabs)}
-        self.decoder = {idx: char for char, idx in self.encoder.items()}
-
-    def encode(self, text: str) -> list[int]:
-        return [self.encoder[char] for char in text]
-
-    def decode(self, indices: list[int]) -> str:
-        return ''.join(self.decoder[idx] for idx in indices)
 
 
 def train(model: NeuralNet, dataloader: DataLoader,
@@ -63,9 +50,9 @@ def evaluate(model: NeuralNet, dataloader: DataLoader, device: str | None = None
 
 
 @torch.no_grad()
-def generate(model: NeuralNet, prompt: str, tokenizer: CharTokenizer,
-             context_len: int, device: str | None = None):
+def generate(model: NeuralNet, prompt: str, tokenizer: CharTokenizer, device: str | None = None):
     model.eval()
+    context_len = model._context_length
     if len(prompt) > 2 / 3 * context_len:
         warn(f'Prompt larger than 2/3 the context length: {len(prompt)} vs {context_len}')
         prompt = prompt[:context_len // 2] if len(prompt) > context_len // 2 else prompt

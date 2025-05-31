@@ -1,8 +1,20 @@
-# Components of LLMs
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from dataclasses import dataclass
+
+
+class CharTokenizer:
+    def __init__(self, vocabs: list[str]) -> None:
+        self.nvocab = len(vocabs)
+        self.encoder = {char: idx for idx, char in enumerate(vocabs)}
+        self.decoder = {idx: char for char, idx in self.encoder.items()}
+
+    def encode(self, text: str) -> list[int]:
+        return [self.encoder[char] for char in text]
+
+    def decode(self, indices: list[int]) -> str:
+        return ''.join(self.decoder[idx] for idx in indices)
 
 
 @dataclass
@@ -16,8 +28,9 @@ class SysConfig:
 
 # thin wrapper to include loss in the model
 class NeuralNet(nn.Module):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, context_length: int) -> None:
+        super().__init__()
+        self._context_length = context_length
 
     def loss(self, logits: torch.Tensor, target_indx: torch.Tensor) -> torch.Tensor:
         # default loss estimator with cross-entropy

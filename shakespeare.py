@@ -1,5 +1,4 @@
-import torch.torch_version
-from modules import SysConfig, InputEmbedding, OutputLayer, TransformerBlock, NeuralNet
+from modules import *
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,8 +7,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from torch.utils.tensorboard.writer import SummaryWriter
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 torch.manual_seed(42)  # the answer to life, the universe, and everything
-import numpy as np
-from toolkit import train, evaluate, generate, CharTokenizer
+from toolkit import train, evaluate, generate
 
 
 # %% Create dataset
@@ -29,7 +27,7 @@ class DocDataset(Dataset):
 
 class ShakespearePred(NeuralNet):
     def __init__(self, config: SysConfig) -> None:
-        super().__init__()
+        super().__init__(config.T)
         self.input_layer = InputEmbedding(config)
         self.output_layer = OutputLayer(config, self.input_layer.token_embed)
         self.nn_ = nn.Sequential(self.input_layer,
@@ -85,7 +83,7 @@ checkpoint_interval = 50  # save checkpoint every 50 epochs
 input_prompt = "We are accounted poor citizens, the patricians good. What authority surfeits on would relieve us:".lower()
 print(f'>>> Initial output: [{input_prompt}]')
 print(generate(tinyllm, input_prompt,
-               tokenizer, device=DEVICE, context_len=ShakespeareConfig.T))
+               tokenizer, device=DEVICE))
 
 log_statistics = True
 use_tensorboard = True
@@ -99,7 +97,7 @@ if use_tensorboard:
     writer = SummaryWriter(log_dir='runs/shakespeare')
 
 
-for epoch in range(101):
+for epoch in range(100):
     train_loss = train(tinyllm, train_loader, optimizer, device=DEVICE)
     test_loss = evaluate(tinyllm, test_loader, device=DEVICE, summarize_loss=True)
     scheduler.step(test_loss)
@@ -108,12 +106,12 @@ for epoch in range(101):
         writer.add_scalar("Loss/test", test_loss, epoch)
         writer.add_scalar("LR", optimizer.param_groups[0]['lr'], epoch)
     if log_statistics:
-        statistics.write(f'{epoch}, {train_loss}, {test_loss}, {optimizer.param_groups[0]['lr']}\n')
+        statistics.write(f'{train_loss}, {test_loss}, {optimizer.param_groups[0]['lr']}\n')
         statistics.flush()
 
     print(f'--> Output at {epoch} [{input_prompt}]')
     print(generate(tinyllm, input_prompt,
-                   tokenizer, device=DEVICE, context_len=ShakespeareConfig.T))
+                   tokenizer, device=DEVICE))
 
     if epoch % checkpoint_interval == 0 and epoch > 0:
         # Save checkpoint
